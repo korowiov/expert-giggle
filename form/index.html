@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payment Form</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            display: flex;
+            flex-direction: row;
+            font-family: "Fira Sans", Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e9eff5, #fdfdfd);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        .main-content {
+            flex: 1;
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        .card {
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            overflow: hidden;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .card .card-header {
+            background: rgba(0, 0, 0, 0.02);
+            width: 100%;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            padding: 30px;
+        }
+
+        .card form {
+            padding: 30px;
+        }
+
+        .card p {
+            margin: 0;
+        }
+
+        .card h2,
+        .card h4 {
+            text-align: left;
+            margin: 0;
+        }
+
+        .form-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            min-height: 900px;
+        }
+
+        .card-form {
+            max-width: 420px;
+            position: absolute;
+            z-index: 1;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 300px;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            transition: left 0.3s ease-in-out;
+            z-index: 2;
+        }
+
+        .sidebar.open {
+            left: 0;
+        }
+
+        .sidebar .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #333;
+        }
+
+        .info-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 1;
+            transition: background-color 0.25s ease-in-out;
+        }
+
+        body.sidebar-open .main-content {
+            margin-left: 300px;
+        }
+
+        .step-container {
+            padding: 32px;
+            width: 100%;
+        }
+
+        h2 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 24px;
+            color: #333;
+            text-align: center;
+        }
+
+        .task-section ul {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0 0;
+        }
+
+        .task-section li {
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #444;
+            line-height: 1.5;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .task-section li::before {
+            content: "➔";
+            position: absolute;
+            left: 0;
+            color: #007bff;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .task-section li b {
+            display: inline-block;
+            padding: 0 4px;
+            background-color: #e6f0fa;
+            color: #007bff;
+            border: 1px solid #b3d4fc;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: normal;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #d3dce6;
+            border-radius: 8px;
+            background-color: #fafbfc;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #007bff;
+            background-color: #fff;
+        }
+
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 400;
+            border: none;
+            width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.25s ease-in-out;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .btn:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+
+        .error {
+            color: #e63946;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 480px) {
+            .form-container {
+                padding: 30px 20px;
+            }
+        }
+
+        .payment-method {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+            width: 100%;
+        }
+
+        .payment-method input {
+            display: none;
+        }
+
+        .payment-method input:checked + span {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .payment-method label span {
+            width: 100%;
+            display: block;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            padding: 10px;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        .payment-method label {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffffff;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 400;
+            color: #333;
+            cursor: pointer;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 8px solid #000;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: start;
+            align-items: center;
+            gap: 20px;
+            min-height: 420px;
+        }
+
+        .loader-container {
+            &.center {
+                padding: 20px;
+                justify-content: center;
+            }
+        }
+
+        .loader-container h3 {
+            margin: 0;
+            font-weight: 400;
+        }
+
+        .hidden {
+            opacity: 0;
+            z-index: -1;
+        }
+
+        #summaryContent {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            font-size: 14px;
+            width: 100%;
+            color: #333;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<button class="info-btn" onclick="toggleSidebar()"><svg xmlns="http://www.w3.org/2000/svg" height="48px" viewBox="0 -960 960 960" width="48px" fill="rgba(0, 0, 0, 0.4)"><path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg></button>
+<div class="main-content">
+    <div class="form-container">
+        <div id="formStep" class="card card-form">
+            <div class="card-header">
+                <h2>Payment Form</h2>
+            </div>
+            <form id="paymentForm" novalidate>
+                <div class="form-group">
+                    <label>Payment Method</label>
+                    <div class="payment-method">
+                        <label>
+                            <input type="radio" name="paymentMethod" value="card" checked />
+                            <span>Card</span>
+                        </label>
+                        <label>
+                            <input type="radio" name="paymentMethod" value="blik" />
+                            <span>BLIK</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name" required />
+                    <div class="error" id="nameError"></div>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required />
+                    <div class="error" id="emailError"></div>
+                </div>
+                <div class="form-group">
+                    <label for="card">Card Number</label>
+                    <input type="text" id="card" name="card" maxlength="19" pattern="\d{4}-\d{4}-\d{4}-\d{4}" required />
+                    <div class="error" id="cardError"></div>
+                </div>
+                <div class="form-group">
+                    <label for="expiry">Expiry Date (MM/YY)</label>
+                    <input type="text" id="expiry" name="expiry" maxlength="5" pattern="\d{2}/\d{2}" required />
+                    <div class="error" id="expiryError"></div>
+                </div>
+                <div class="form-group">
+                    <label for="cvv">CVV</label>
+                    <input type="text" id="cvv" name="cvv" maxlength="3" pattern="\d{3}" required />
+                    <div class="error" id="cvvError"></div>
+                </div>
+                <div class="form-group">
+                    <label for="amount">Amount</label>
+                    <input type="number" id="amount" name="amount" step="0.01" required />
+                    <div class="error" id="amountError"></div>
+                </div>
+                <div class="form-group" id="blikField" style="display: none;">
+                    <label for="blik">BLIK Code</label>
+                    <input type="text" id="blik" name="blik" maxlength="6" pattern="\d{6}" />
+                    <div class="error" id="blikError"></div>
+                </div>
+                <button type="submit" class="btn">Pay</button>
+            </form>
+        </div>
+        <div id="processingStep" class="card card-form loader-container center hidden">
+            <span class="loader"></span>
+            <h3>Processing...</h3>
+        </div>
+        <div id="successStep" class="card card-form loader-container hidden">
+            <div class="card-header">
+                <h2>Success!</h2>
+            </div>
+            <div class="step-container">
+                <div class="summary-container">
+                    <label>Payment Summary</label>
+                    <div id="summaryContent"></div>
+                </div>
+                <button class="btn" onclick="restartForm()">Back to Form</button>
+            </div>
+        </div>
+        <div id="errorStep" class="card card-form loader-container center hidden">
+            <h2>Error</h2>
+            <button id="btnRetry" class="btn">Try again</button>
+        </div>
+    </div>
+</div>
+<div class="sidebar task-section" id="sidebar">
+    <button class="close-btn" onclick="toggleSidebar()">×</button>
+    <p>Przetestuj formularz płatności i zgłoś (w formie pisemnej) ewentulane błędy. Poniżej kilka przydatnych informacji:</p>
+    <ul>
+        <li>dla płatności typu BLIK formularz przechodzi poprawnie po wpisaniu następującego kodu: <b>123456</b>. <br />Pozostałe dane mogą być dowolne.</li>
+        <li>dla płatności typu CARD formularz przechodzi poprawnie po wpisaniu następującego numeru karty: <b>4111 1111 1111 1111</b>.<br />Pozostałe dane mogą być dowolne.</li>
+        <li>w celu przyspieszenia testów możesz wykorzystać funkcję <b>fillForm()</b>, która automatycznie wypełni formularz poprawnymi danymi.</li>
+    </ul>
+</div>
+<script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        const body = document.body;
+        sidebar.classList.toggle("open");
+        body.classList.toggle("sidebar-open");
+    }
+
+    const form = document.getElementById("paymentForm");
+    const formStep = document.getElementById("formStep");
+    const processingStep = document.getElementById("processingStep");
+    const successStep = document.getElementById("successStep");
+    const errorStep = document.getElementById("errorStep");
+    const btnRetry = document.getElementById("btnRetry");
+
+    const methodInputs = document.getElementsByName("paymentMethod");
+    const cardFields = ["card", "expiry", "cvv", "name"];
+    const blikField = document.getElementById("blikField");
+
+    const cardInput = document.getElementById("card");
+    cardInput.addEventListener("input", function (e) {
+        let value = e.target.value.replace(/\D/g, "");
+        let formatted = "";
+        for (let i = 0; i < value.length; i++) {
+            if (i > 0 && i % 4 === 0) {
+                formatted += "-";
+            }
+            formatted += value[i];
+        }
+        e.target.value = formatted.slice(0, 19);
+    });
+
+    const expiryInput = document.getElementById("expiry");
+    expiryInput.addEventListener("input", function (e) {
+        let value = e.target.value.replace(/\D/g, "");
+        if (value.length > 4) value = value.slice(0, 4);
+        let formatted = "";
+        for (let i = 0; i < value.length; i++) {
+            if (i === 2) {
+                formatted += "/";
+            }
+            formatted += value[i];
+        }
+        e.target.value = formatted.slice(0, 5);
+    });
+
+    const cvvInput = document.getElementById("cvv");
+    cvvInput.addEventListener("input", function (e) {
+        e.target.value = e.target.value.replace(/\D/g, "").slice(0, 3);
+    });
+
+    form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        let hasError = false;
+        const method = document.querySelector('input[name="paymentMethod"]:checked')
+            .value;
+        const name = document.getElementById("name").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const card = document.getElementById("card").value.trim();
+        const expiry = document.getElementById("expiry").value.trim();
+        const cvv = document.getElementById("cvv").value.trim();
+        const amount = document.getElementById("amount").value.trim();
+        const blik = document.getElementById("blik").value.trim();
+
+        document.querySelectorAll(".error").forEach((el) => (el.innerText = ""));
+
+        if (!email.includes("@")) {
+            document.getElementById("emailError").innerText = "Invalid email address";
+            hasError = true;
+        }
+        if (!amount || parseFloat(amount) <= 0) {
+            document.getElementById("amountError").innerText =
+                "Amount must be greater than zero";
+            hasError = true;
+        }
+
+        if (method === "card") {
+            if (card.length < 16) {
+                document.getElementById("cardError").innerText =
+                    "Card number is too short";
+                hasError = true;
+            }
+            if (!/^\d{2}\/\d{2}$/.test(expiry)) {
+                document.getElementById("expiryError").innerText =
+                    "Format MM/YY is required";
+                hasError = true;
+            }
+            if (cvv.length < 3) {
+                document.getElementById("cvvError").innerText = "CVV is invalid";
+                hasError = true;
+            }
+        } else if (method === "blik") {
+            if (!/^\d{6}$/.test(blik)) {
+                document.getElementById("blikError").innerText =
+                    "BLIK code must be 6 digits";
+                hasError = true;
+            }
+        }
+
+        if (!hasError) {
+            formStep.classList.add("hidden");
+            processingStep.classList.remove("hidden");
+
+            await startPayment(4);
+
+            if (method === "card") {
+                if (card.replace(/\s/g, '') === "4111111111111111") {
+                    // card success
+                    getSummary({ name, email, method, card, expiry, amount });
+                    processingStep.classList.add("hidden");
+                    successStep.classList.remove("hidden");
+                    form.reset();
+                } else {
+                    await fetch(
+                        "https://run.mocky.io/v3/7a64eea5-80d9-49da-812b-14ce6802f92f"
+                    );
+                }
+            } else {
+                if (blik === "123456") {
+                    // blik success
+                    getSummary({ name, email, method, card, expiry, amount });
+                    await fetch("https://run.mocky.io/v3/f7aa0e85-17b8-4695-8402-e18d5ef04e10");
+                    processingStep.classList.add("hidden");
+                    successStep.classList.remove("hidden");
+                    form.reset();
+                } else {
+                    // blik error
+                    processingStep.classList.add("hidden");
+                    errorStep.classList.remove("hidden");
+                }
+            }
+        }
+    });
+
+    window.fillForm = function () {
+        document.getElementById("name").value = "John Doe";
+        document.getElementById("email").value = "john.doe@example.com";
+        document.getElementById("card").value = "4111 1111 1111 1111";
+        document.getElementById("expiry").value = "12/29";
+        document.getElementById("cvv").value = "123";
+        document.getElementById("amount").value = "49.99";
+        document.getElementById("blik").value = "123456";
+    };
+
+    btnRetry.addEventListener("click", function () {
+        window.location.href = 'https://hfjkshdjf.com/';
+    });
+
+    methodInputs.forEach((input) => {
+        input.addEventListener("change", function () {
+            const isCard = this.value === "card";
+            cardFields.forEach((id) => {
+                const group = document.getElementById(id).closest(".form-group");
+                const inputElement = document.getElementById(id);
+                group.style.display = isCard ? "block" : "none";
+                if (isCard) {
+                    inputElement.setAttribute("required", "required");
+                } else {
+                    inputElement.removeAttribute("required");
+                }
+            });
+            const blikInput = document.getElementById("blik");
+            blikField.style.display = isCard ? "none" : "block";
+            if (isCard) {
+                blikInput.removeAttribute("required");
+            } else {
+                blikInput.setAttribute("required", "required");
+            }
+            document.querySelectorAll(".error").forEach((el) => (el.innerText = ""));
+        });
+    });
+
+    function restartForm() {
+        form.reset();
+        successStep.classList.add("hidden");
+        formStep.classList.remove("hidden");
+        methodInputs[0].dispatchEvent(new Event("change")); // reset pól
+    }
+
+    function startPayment(num) {
+        return new Promise(function (res) {
+            setTimeout(async function () {
+                await fetch(
+                    "https://run.mocky.io/v3/25ddf9d8-6b57-44d4-8bf1-8cce873c294c"
+                );
+                if (num > 1) {
+                    startPayment(num - 1).then(res);
+                } else {
+                    return res();
+                }
+            }, 300);
+        });
+    }
+
+    function getSummary({ name, email, method, card, expiry, amount }) {
+        const summary = document.getElementById("summaryContent");
+        if (method === "card") {
+            summary.innerHTML = `
+            <div><strong>Full Name:</strong> ${name}</div>
+            <div><strong>Email:</strong> ${email}</div>
+            <div><strong>Payment Method:</strong> ${method.toUpperCase()}</div>
+              <div><strong>Card Number:</strong> **** **** **** ${card.slice(-4)}</div>
+              <div><strong>Expiry Date:</strong> ${expiry}</div>
+            <div><strong>Amount:</strong> 156</div>
+          `;
+        } else {
+            summary.innerHTML = `
+            <div><strong>Email:</strong> ${email}</div>
+            <div><strong>Payment Method:</strong> ${method.toUpperCase()}</div>
+            <div><strong>Amount:</strong> ${parseFloat(amount).toFixed(2)}</div>
+          `;
+        }
+    }
+</script>
+</body>
+</html>
