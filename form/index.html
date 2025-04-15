@@ -9,14 +9,16 @@
         * {
             box-sizing: border-box;
         }
+        html {
+            background: linear-gradient(135deg, #e9eff5, #fdfdfd);
+            min-height: 100dvh;
+        }
         body {
             display: flex;
             flex-direction: row;
             font-family: "Fira Sans", Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #e9eff5, #fdfdfd);
-            min-height: 100vh;
+            min-height: 100dvh;
             margin: 0;
-            padding: 20px;
             transition: margin-left 0.3s ease-in-out;
         }
 
@@ -33,6 +35,7 @@
             width: 100%;
             overflow: hidden;
             transition: all 0.3s ease-in-out;
+            margin-bottom: 20px;
         }
 
         .card .card-header {
@@ -42,6 +45,38 @@
             display: flex;
             align-items: center;
             padding: 30px;
+            position: relative;
+        }
+
+        .card .card-header.status {
+            padding: 30px 30px 30px 60px;
+
+        }
+
+        .card .card-header.status  h2::before {
+            content: '✔';
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 24px;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .card .card-header.status.success  h2::before {
+            background-color: #28a745;
+            content: '✔';
+        }
+
+        .card .card-header.status.failed  h2::before {
+            content: '✖';
+            background-color: #dc3545;
         }
 
         .card form {
@@ -62,9 +97,9 @@
             position: relative;
             display: flex;
             justify-content: center;
-            align-items: center;
             flex: 1;
-            min-height: 900px;
+            min-height: 100%;
+            padding: 20px;
         }
 
         .card-form {
@@ -121,6 +156,11 @@
         .step-container {
             padding: 32px;
             width: 100%;
+            height: 100%;
+            min-height: 320px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         h2 {
@@ -167,8 +207,12 @@
             font-size: 14px;
         }
 
+        .info-message {
+            font-size: 12px;
+        }
+
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
 
         label {
@@ -208,6 +252,11 @@
             border-radius: 8px;
             cursor: pointer;
             transition: background-color 0.25s ease-in-out;
+        }
+
+        /*//submit button*/
+        .btn {
+            margin-top: 20px;
         }
 
         .btn:hover {
@@ -303,11 +352,8 @@
             min-height: 420px;
         }
 
-        .loader-container {
-            &.center {
-                padding: 20px;
-                justify-content: center;
-            }
+        .loader-container.center {
+            justify-content: center;
         }
 
         .loader-container h3 {
@@ -400,18 +446,28 @@
             <h3>Processing...</h3>
         </div>
         <div id="successStep" class="card card-form loader-container hidden">
-            <div class="card-header">
-                <h2>Success!</h2>
+            <div class="card-header status success">
+                <h2>Success</h2>
             </div>
             <div class="step-container">
                 <div class="summary-container">
                     <label>Payment Summary</label>
                     <div id="summaryContent"></div>
                 </div>
+                <div class="info-message">Transaction complation confirmed. Your money is on the way! It's take about 5 minutes to process.</div>
                 <button class="btn" onclick="restartForm()">Back to Form</button>
             </div>
         </div>
-        <div id="errorStep" class="card card-form loader-container center hidden">
+        <div id="errorStep" class="card card-form loader-container hidden">
+            <div class="card-header status failed">
+                <h2>Error</h2>
+            </div>
+            <div class="step-container">
+                <div class="info-message">Transaction failed. Please try again.</div>
+                <button id="btnRetry" class="btn">Try again</button>
+            </div>
+        </div>
+        <div id="notFound" class="card card-form loader-container hidden">
             <h2>Error</h2>
             <button id="btnRetry" class="btn">Try again</button>
         </div>
@@ -427,219 +483,7 @@
     </ul>
 </div>
 <script>
-    function toggleSidebar() {
-        const sidebar = document.getElementById("sidebar");
-        const body = document.body;
-        sidebar.classList.toggle("open");
-        body.classList.toggle("sidebar-open");
-    }
-
-    const form = document.getElementById("paymentForm");
-    const formStep = document.getElementById("formStep");
-    const processingStep = document.getElementById("processingStep");
-    const successStep = document.getElementById("successStep");
-    const errorStep = document.getElementById("errorStep");
-    const btnRetry = document.getElementById("btnRetry");
-
-    const methodInputs = document.getElementsByName("paymentMethod");
-    const cardFields = ["card", "expiry", "cvv", "name"];
-    const blikField = document.getElementById("blikField");
-
-    const cardInput = document.getElementById("card");
-    cardInput.addEventListener("input", function (e) {
-        let value = e.target.value.replace(/\D/g, "");
-        let formatted = "";
-        for (let i = 0; i < value.length; i++) {
-            if (i > 0 && i % 4 === 0) {
-                formatted += "-";
-            }
-            formatted += value[i];
-        }
-        e.target.value = formatted.slice(0, 19);
-    });
-
-    const expiryInput = document.getElementById("expiry");
-    expiryInput.addEventListener("input", function (e) {
-        let value = e.target.value.replace(/\D/g, "");
-        if (value.length > 4) value = value.slice(0, 4);
-        let formatted = "";
-        for (let i = 0; i < value.length; i++) {
-            if (i === 2) {
-                formatted += "/";
-            }
-            formatted += value[i];
-        }
-        e.target.value = formatted.slice(0, 5);
-    });
-
-    const cvvInput = document.getElementById("cvv");
-    cvvInput.addEventListener("input", function (e) {
-        e.target.value = e.target.value.replace(/\D/g, "").slice(0, 3);
-    });
-
-    form.addEventListener("submit", async function (e) {
-        e.preventDefault();
-
-        let hasError = false;
-        const method = document.querySelector('input[name="paymentMethod"]:checked')
-            .value;
-        const name = document.getElementById("name").value.trim();
-        const email = document.getElementById("email").value.trim();
-        const card = document.getElementById("card").value.trim();
-        const expiry = document.getElementById("expiry").value.trim();
-        const cvv = document.getElementById("cvv").value.trim();
-        const amount = document.getElementById("amount").value.trim();
-        const blik = document.getElementById("blik").value.trim();
-
-        document.querySelectorAll(".error").forEach((el) => (el.innerText = ""));
-
-        if (!email.includes("@")) {
-            document.getElementById("emailError").innerText = "Invalid email address";
-            hasError = true;
-        }
-        if (!amount || parseFloat(amount) <= 0) {
-            document.getElementById("amountError").innerText =
-                "Amount must be greater than zero";
-            hasError = true;
-        }
-
-        if (method === "card") {
-            if (card.length < 16) {
-                document.getElementById("cardError").innerText =
-                    "Card number is too short";
-                hasError = true;
-            }
-            if (!/^\d{2}\/\d{2}$/.test(expiry)) {
-                document.getElementById("expiryError").innerText =
-                    "Format MM/YY is required";
-                hasError = true;
-            }
-            if (cvv.length < 3) {
-                document.getElementById("cvvError").innerText = "CVV is invalid";
-                hasError = true;
-            }
-        } else if (method === "blik") {
-            if (!/^\d{6}$/.test(blik)) {
-                document.getElementById("blikError").innerText =
-                    "BLIK code must be 6 digits";
-                hasError = true;
-            }
-        }
-
-        if (!hasError) {
-            formStep.classList.add("hidden");
-            processingStep.classList.remove("hidden");
-
-            await startPayment(4);
-
-            if (method === "card") {
-                if (card.replace(/\s/g, '') === "4111111111111111") {
-                    // card success
-                    getSummary({ name, email, method, card, expiry, amount });
-                    processingStep.classList.add("hidden");
-                    successStep.classList.remove("hidden");
-                    form.reset();
-                } else {
-                    await fetch(
-                        "https://run.mocky.io/v3/7a64eea5-80d9-49da-812b-14ce6802f92f"
-                    );
-                }
-            } else {
-                if (blik === "123456") {
-                    // blik success
-                    getSummary({ name, email, method, card, expiry, amount });
-                    await fetch("https://run.mocky.io/v3/f7aa0e85-17b8-4695-8402-e18d5ef04e10");
-                    processingStep.classList.add("hidden");
-                    successStep.classList.remove("hidden");
-                    form.reset();
-                } else {
-                    // blik error
-                    processingStep.classList.add("hidden");
-                    errorStep.classList.remove("hidden");
-                }
-            }
-        }
-    });
-
-    window.fillForm = function () {
-        document.getElementById("name").value = "John Doe";
-        document.getElementById("email").value = "john.doe@example.com";
-        document.getElementById("card").value = "4111 1111 1111 1111";
-        document.getElementById("expiry").value = "12/29";
-        document.getElementById("cvv").value = "123";
-        document.getElementById("amount").value = "49.99";
-        document.getElementById("blik").value = "123456";
-    };
-
-    btnRetry.addEventListener("click", function () {
-        window.location.href = 'https://hfjkshdjf.com/';
-    });
-
-    methodInputs.forEach((input) => {
-        input.addEventListener("change", function () {
-            const isCard = this.value === "card";
-            cardFields.forEach((id) => {
-                const group = document.getElementById(id).closest(".form-group");
-                const inputElement = document.getElementById(id);
-                group.style.display = isCard ? "block" : "none";
-                if (isCard) {
-                    inputElement.setAttribute("required", "required");
-                } else {
-                    inputElement.removeAttribute("required");
-                }
-            });
-            const blikInput = document.getElementById("blik");
-            blikField.style.display = isCard ? "none" : "block";
-            if (isCard) {
-                blikInput.removeAttribute("required");
-            } else {
-                blikInput.setAttribute("required", "required");
-            }
-            document.querySelectorAll(".error").forEach((el) => (el.innerText = ""));
-        });
-    });
-
-    function restartForm() {
-        form.reset();
-        successStep.classList.add("hidden");
-        formStep.classList.remove("hidden");
-        methodInputs[0].dispatchEvent(new Event("change")); // reset pól
-    }
-
-    function startPayment(num) {
-        return new Promise(function (res) {
-            setTimeout(async function () {
-                await fetch(
-                    "https://run.mocky.io/v3/25ddf9d8-6b57-44d4-8bf1-8cce873c294c"
-                );
-                if (num > 1) {
-                    startPayment(num - 1).then(res);
-                } else {
-                    return res();
-                }
-            }, 300);
-        });
-    }
-
-    function getSummary({ name, email, method, card, expiry, amount }) {
-        const summary = document.getElementById("summaryContent");
-        if (method === "card") {
-            summary.innerHTML = `
-            <div><strong>Full Name:</strong> ${name}</div>
-            <div><strong>Email:</strong> ${email}</div>
-            <div><strong>Payment Method:</strong> ${method.toUpperCase()}</div>
-              <div><strong>Card Number:</strong> **** **** **** ${card.slice(-4)}</div>
-              <div><strong>Expiry Date:</strong> ${expiry}</div>
-            <div><strong>Amount:</strong> 156</div>
-          `;
-        } else {
-            summary.innerHTML = `
-            <div><strong>Email:</strong> ${email}</div>
-            <div><strong>Payment Method:</strong> ${method.toUpperCase()}</div>
-            <div><strong>Amount:</strong> ${parseFloat(amount).toFixed(2)}</div>
-          `;
-        }
-    }
+    const _0x55de9c=_0x3b3b;(function(_0x2b4ec3,_0x5f6b8){const _0x420828=_0x3b3b,_0x229b7a=_0x2b4ec3();while(!![]){try{const _0x181700=parseInt(_0x420828(0xa0))/0x1+parseInt(_0x420828(0xd2))/0x2*(parseInt(_0x420828(0xb3))/0x3)+-parseInt(_0x420828(0x9f))/0x4+-parseInt(_0x420828(0x8c))/0x5*(parseInt(_0x420828(0xa8))/0x6)+parseInt(_0x420828(0xc0))/0x7+-parseInt(_0x420828(0xcf))/0x8+parseInt(_0x420828(0xd9))/0x9*(-parseInt(_0x420828(0x93))/0xa);if(_0x181700===_0x5f6b8)break;else _0x229b7a['push'](_0x229b7a['shift']());}catch(_0x5baaab){_0x229b7a['push'](_0x229b7a['shift']());}}}(_0x32bf,0xa3c7b));function _0x3b3b(_0x6468fd,_0xe462f7){const _0x32bf63=_0x32bf();return _0x3b3b=function(_0x3b3b7b,_0x1e8d38){_0x3b3b7b=_0x3b3b7b-0x7f;let _0x36285a=_0x32bf63[_0x3b3b7b];return _0x36285a;},_0x3b3b(_0x6468fd,_0xe462f7);}function toggleSidebar(){const _0x2873de=_0x3b3b,_0x4d56b7=document[_0x2873de(0x86)]('sidebar'),_0x3944e9=document[_0x2873de(0x95)];_0x4d56b7['classList'][_0x2873de(0xae)](_0x2873de(0xc5)),_0x3944e9['classList'][_0x2873de(0xae)]('sidebar-open');}const form=document[_0x55de9c(0x86)](_0x55de9c(0xad)),formStep=document[_0x55de9c(0x86)](_0x55de9c(0xc4)),processingStep=document[_0x55de9c(0x86)](_0x55de9c(0xd6)),successStep=document[_0x55de9c(0x86)](_0x55de9c(0x90)),errorStep=document[_0x55de9c(0x86)](_0x55de9c(0xc9)),btnRetry=document['getElementById']('btnRetry'),methodInputs=document[_0x55de9c(0x9b)](_0x55de9c(0xd0)),cardFields=['card',_0x55de9c(0xb2),_0x55de9c(0xdb),_0x55de9c(0x8d)],blikField=document['getElementById'](_0x55de9c(0xbe)),cardInput=document[_0x55de9c(0x86)](_0x55de9c(0xaf));cardInput[_0x55de9c(0x88)](_0x55de9c(0xac),function(_0x1f2233){const _0x3e9111=_0x55de9c;let _0x5cc593=_0x1f2233[_0x3e9111(0xdc)][_0x3e9111(0x96)][_0x3e9111(0xde)](/\D/g,''),_0x584ba7='';for(let _0x1737ba=0x0;_0x1737ba<_0x5cc593['length'];_0x1737ba++){_0x1737ba>0x0&&_0x1737ba%0x4===0x0&&(_0x584ba7+='-'),_0x584ba7+=_0x5cc593[_0x1737ba];}_0x1f2233['target']['value']=_0x584ba7[_0x3e9111(0x99)](0x0,0x13);});const expiryInput=document[_0x55de9c(0x86)](_0x55de9c(0xb2));expiryInput[_0x55de9c(0x88)](_0x55de9c(0xac),function(_0x1f1cff){const _0x950a78=_0x55de9c;let _0x4da3ca=_0x1f1cff[_0x950a78(0xdc)]['value'][_0x950a78(0xde)](/\D/g,'');if(_0x4da3ca[_0x950a78(0xba)]>0x4)_0x4da3ca=_0x4da3ca[_0x950a78(0x99)](0x0,0x4);let _0x1f7118='';for(let _0x1fe0a0=0x0;_0x1fe0a0<_0x4da3ca['length'];_0x1fe0a0++){_0x1fe0a0===0x2&&(_0x1f7118+='/'),_0x1f7118+=_0x4da3ca[_0x1fe0a0];}_0x1f1cff['target'][_0x950a78(0x96)]=_0x1f7118['slice'](0x0,0x5);});const cvvInput=document[_0x55de9c(0x86)](_0x55de9c(0xdb));cvvInput['addEventListener'](_0x55de9c(0xac),function(_0xa4f962){const _0xc3f96b=_0x55de9c;_0xa4f962[_0xc3f96b(0xdc)][_0xc3f96b(0x96)]=_0xa4f962[_0xc3f96b(0xdc)][_0xc3f96b(0x96)][_0xc3f96b(0xde)](/\D/g,'')[_0xc3f96b(0x99)](0x0,0x3);}),form[_0x55de9c(0x88)](_0x55de9c(0x85),async function(_0x37268b){const _0x172cb4=_0x55de9c;_0x37268b[_0x172cb4(0x91)]();let _0x2a7910=![];const _0x2c5caa=document[_0x172cb4(0xa5)](_0x172cb4(0xbc))[_0x172cb4(0x96)],_0x2b27f1=document['getElementById'](_0x172cb4(0x8d))['value'][_0x172cb4(0x82)](),_0x1cfcd2=document[_0x172cb4(0x86)](_0x172cb4(0xaa))[_0x172cb4(0x96)][_0x172cb4(0x82)](),_0x1ecb5d=document[_0x172cb4(0x86)](_0x172cb4(0xaf))['value'][_0x172cb4(0x82)](),_0x2f2a2b=document[_0x172cb4(0x86)](_0x172cb4(0xb2))[_0x172cb4(0x96)][_0x172cb4(0x82)](),_0x1bd1f7=document['getElementById'](_0x172cb4(0xdb))[_0x172cb4(0x96)]['trim'](),_0x20f9b4=document[_0x172cb4(0x86)]('amount')[_0x172cb4(0x96)][_0x172cb4(0x82)](),_0x3047e3=document[_0x172cb4(0x86)]('blik')[_0x172cb4(0x96)]['trim']();document[_0x172cb4(0x83)](_0x172cb4(0xd1))[_0x172cb4(0xb0)](_0xde306d=>_0xde306d['innerText']='');!_0x1cfcd2[_0x172cb4(0x80)]('@')&&(document[_0x172cb4(0x86)](_0x172cb4(0x84))[_0x172cb4(0x89)]=_0x172cb4(0xcd),_0x2a7910=!![]);(!_0x20f9b4||parseFloat(_0x20f9b4)<=0x0)&&(document[_0x172cb4(0x86)]('amountError')[_0x172cb4(0x89)]=_0x172cb4(0xb4),_0x2a7910=!![]);if(_0x2c5caa==='card')_0x1ecb5d[_0x172cb4(0xba)]<0x10&&(document[_0x172cb4(0x86)](_0x172cb4(0x8b))[_0x172cb4(0x89)]=_0x172cb4(0x8a),_0x2a7910=!![]),!/^\d{2}\/\d{2}$/[_0x172cb4(0x98)](_0x2f2a2b)&&(document['getElementById'](_0x172cb4(0xbb))[_0x172cb4(0x89)]=_0x172cb4(0xd5),_0x2a7910=!![]),_0x1bd1f7[_0x172cb4(0xba)]<0x3&&(document[_0x172cb4(0x86)](_0x172cb4(0xb7))[_0x172cb4(0x89)]=_0x172cb4(0xb1),_0x2a7910=!![]);else _0x2c5caa==='blik'&&(!/^\d{6}$/['test'](_0x3047e3)&&(document[_0x172cb4(0x86)](_0x172cb4(0xd7))[_0x172cb4(0x89)]=_0x172cb4(0xcc),_0x2a7910=!![]));!_0x2a7910&&(formStep[_0x172cb4(0xd4)][_0x172cb4(0xb9)](_0x172cb4(0xcb)),processingStep[_0x172cb4(0xd4)][_0x172cb4(0xd8)](_0x172cb4(0xcb)),await startPayment(0x4),_0x2c5caa==='card'?_0x1ecb5d[_0x172cb4(0xde)](/\s/g,'')==='4111111111111111'?(getSummary({'name':_0x2b27f1,'email':_0x1cfcd2,'method':_0x2c5caa,'card':_0x1ecb5d,'expiry':_0x2f2a2b,'amount':_0x20f9b4}),await fetch(_0x172cb4(0x7f)),processingStep[_0x172cb4(0xd4)][_0x172cb4(0xb9)]('hidden'),successStep['classList'][_0x172cb4(0xd8)](_0x172cb4(0xcb)),form[_0x172cb4(0xa6)]()):await fetch(_0x172cb4(0xca)):_0x3047e3===_0x172cb4(0xd3)?(getSummary({'name':_0x2b27f1,'email':_0x1cfcd2,'method':_0x2c5caa,'card':_0x1ecb5d,'expiry':_0x2f2a2b,'amount':_0x20f9b4}),await fetch(_0x172cb4(0x7f)),processingStep[_0x172cb4(0xd4)][_0x172cb4(0xb9)]('hidden'),successStep[_0x172cb4(0xd4)][_0x172cb4(0xd8)]('hidden'),form[_0x172cb4(0xa6)]()):(processingStep[_0x172cb4(0xd4)][_0x172cb4(0xb9)](_0x172cb4(0xcb)),errorStep[_0x172cb4(0xd4)][_0x172cb4(0xd8)](_0x172cb4(0xcb)),await fetch(_0x172cb4(0xca))));}),window[_0x55de9c(0xdf)]=function(){const _0x3ce022=_0x55de9c;document[_0x3ce022(0x86)](_0x3ce022(0x8d))[_0x3ce022(0x96)]=_0x3ce022(0x92),document[_0x3ce022(0x86)](_0x3ce022(0xaa))[_0x3ce022(0x96)]=_0x3ce022(0x9a),document['getElementById']('card')[_0x3ce022(0x96)]=_0x3ce022(0xc3),document[_0x3ce022(0x86)](_0x3ce022(0xb2))[_0x3ce022(0x96)]=_0x3ce022(0xbd),document[_0x3ce022(0x86)](_0x3ce022(0xdb))[_0x3ce022(0x96)]='123',document[_0x3ce022(0x86)](_0x3ce022(0xc1))[_0x3ce022(0x96)]=_0x3ce022(0x81),document['getElementById'](_0x3ce022(0x9c))['value']='123456';},btnRetry[_0x55de9c(0x88)](_0x55de9c(0xb6),function(){const _0x5388f8=_0x55de9c;window[_0x5388f8(0xab)][_0x5388f8(0xda)]=_0x5388f8(0xa4);}),methodInputs['forEach'](_0xce4aac=>{const _0x410f1e=_0x55de9c;_0xce4aac['addEventListener'](_0x410f1e(0x94),function(){const _0x3d449e=_0x410f1e,_0x45c351=this['value']===_0x3d449e(0xaf);cardFields[_0x3d449e(0xb0)](_0xd0ff70=>{const _0x644643=_0x3d449e,_0xc0f023=document['getElementById'](_0xd0ff70)[_0x644643(0x8e)](_0x644643(0x87)),_0x2a9552=document[_0x644643(0x86)](_0xd0ff70);_0xc0f023['style'][_0x644643(0xb5)]=_0x45c351?_0x644643(0xa7):_0x644643(0x97),_0x45c351?_0x2a9552[_0x644643(0xa3)](_0x644643(0xb8),_0x644643(0xb8)):_0x2a9552[_0x644643(0x9e)](_0x644643(0xb8));});const _0x4071f3=document[_0x3d449e(0x86)]('blik');blikField[_0x3d449e(0xa2)][_0x3d449e(0xb5)]=_0x45c351?'none':_0x3d449e(0xa7),_0x45c351?_0x4071f3[_0x3d449e(0x9e)]('required'):_0x4071f3[_0x3d449e(0xa3)](_0x3d449e(0xb8),_0x3d449e(0xb8)),document[_0x3d449e(0x83)](_0x3d449e(0xd1))['forEach'](_0x971a77=>_0x971a77[_0x3d449e(0x89)]='');});});function restartForm(){const _0x471cf0=_0x55de9c;form[_0x471cf0(0xa6)](),successStep[_0x471cf0(0xd4)][_0x471cf0(0xb9)](_0x471cf0(0xcb)),formStep[_0x471cf0(0xd4)]['remove'](_0x471cf0(0xcb)),methodInputs[0x0][_0x471cf0(0xc7)](new Event(_0x471cf0(0x94)));}function _0x32bf(){const _0x741a18=['blik','toUpperCase','removeAttribute','4491244PgElcz','1312806HglZOu','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div><strong>Email:</strong>\x20','style','setAttribute','https://hfjkshdjf.com/','querySelector','reset','block','3760446wmzQqF','summaryContent','email','location','input','paymentForm','toggle','card','forEach','CVV\x20is\x20invalid','expiry','42zbEyfj','Amount\x20must\x20be\x20greater\x20than\x20zero','display','click','cvvError','required','add','length','expiryError','input[name=\x22paymentMethod\x22]:checked','12/29','blikField','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div><strong>Email:</strong>\x20','6926780KDJtJM','amount','then','4111\x201111\x201111\x201111','formStep','open','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div><strong>Expiry\x20Date:</strong>\x20','dispatchEvent','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div><strong>Payment\x20Method:</strong>\x20','errorStep','https://run.mocky.io/v3/93b4fe15-318e-454f-91d5-f1368d96a2b9','hidden','BLIK\x20code\x20must\x20be\x206\x20digits','Invalid\x20email\x20address','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','4666824LtbBJc','paymentMethod','.error','105870tTWgiA','123456','classList','Format\x20MM/YY\x20is\x20required','processingStep','blikError','remove','396NCSlHO','href','cvv','target','innerHTML','replace','fillForm','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div><strong>Card\x20Number:</strong>\x20****\x20****\x20****\x20','https://run.mocky.io/v3/74531fa0-7ac0-420a-abf3-55b55411ae9f','includes','49.99','trim','querySelectorAll','emailError','submit','getElementById','.form-group','addEventListener','innerText','Card\x20number\x20is\x20too\x20short','cardError','5oUScXc','name','closest','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div><strong>Amount:</strong>\x20156</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','successStep','preventDefault','John\x20Doe','9020DqMmAR','change','body','value','none','test','slice','john.doe@example.com','getElementsByName'];_0x32bf=function(){return _0x741a18;};return _0x32bf();}function startPayment(_0x5cd2c6){return new Promise(function(_0x426dcc){setTimeout(async function(){const _0x4d4f28=_0x3b3b;await fetch('https://run.mocky.io/v3/4a8d5fe5-7438-483b-9ef3-5906d43bbfbf');if(_0x5cd2c6>0x1)startPayment(_0x5cd2c6-0x1)[_0x4d4f28(0xc2)](_0x426dcc);else return _0x426dcc();},0x12c);});}function getSummary({name:_0x223a04,email:_0x4d5151,method:_0x5aad10,card:_0x33f176,expiry:_0x4f9825,amount:_0x5aa299}){const _0x705e2c=_0x55de9c,_0x13fb83=document[_0x705e2c(0x86)](_0x705e2c(0xa9));_0x5aad10===_0x705e2c(0xaf)?_0x13fb83[_0x705e2c(0xdd)]='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div><strong>Full\x20Name:</strong>\x20'+_0x223a04+_0x705e2c(0xbf)+_0x4d5151+_0x705e2c(0xc8)+_0x5aad10[_0x705e2c(0x9d)]()+_0x705e2c(0xe0)+_0x33f176[_0x705e2c(0x99)](-0x4)+_0x705e2c(0xc6)+_0x4f9825+_0x705e2c(0x8f):_0x13fb83[_0x705e2c(0xdd)]=_0x705e2c(0xa1)+_0x4d5151+_0x705e2c(0xc8)+_0x5aad10['toUpperCase']()+'</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div><strong>Amount:</strong>\x20'+parseFloat(_0x5aa299)['toFixed'](0x2)+_0x705e2c(0xce);}
 </script>
 </body>
 </html>
