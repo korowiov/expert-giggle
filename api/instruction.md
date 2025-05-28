@@ -1,5 +1,12 @@
 ## ✅ Instrukcja do testowania API
 
+### 📦 API
+API jest dostępne pod adresem:
+
+```
+https://ktm-testing-api.onrender.com/
+```
+
 ### 🔐 Autoryzacja
 
 Aby korzystać z większości endpointów, musisz najpierw uwierzytelnić się i uzyskać **JWT token**.
